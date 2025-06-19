@@ -412,6 +412,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="showTab('feeding')">Feeding</button>
                 <button class="tab" onclick="showTab('diaper')">Diaper Change</button>
+                <button class="tab" onclick="showTab('sleep')">Sleep</button>
                 <button class="tab" onclick="showTab('history')">History</button>
             </div>
             
@@ -492,6 +493,30 @@
                 </form>
             </div>
             
+            <!-- Sleep Tab -->
+            <div id="sleep" class="content">
+                <h2>Record Sleep</h2>
+                <form id="sleep-form">
+                    <div class="form-group">
+                        <label for="sleep-date">Date</label>
+                        <input type="date" id="sleep-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sleep-start-time">Start Time</label>
+                        <input type="time" id="sleep-start-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sleep-end-time">End Time</label>
+                        <input type="time" id="sleep-end-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sleep-notes">Notes (optional)</label>
+                        <input type="text" id="sleep-notes">
+                    </div>
+                    <button type="submit">Save Sleep Record</button>
+                </form>
+            </div>
+            
             <!-- History Tab -->
             <div id="history" class="content">
                 <h2>Baby Care History</h2>
@@ -537,6 +562,28 @@
                         <div class="summary-item">
                             <div class="summary-number" id="last-diaper">-</div>
                             <div class="summary-label">Last Change</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="sleep-summary" class="summary">
+                    <h3>Today's Sleep Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number" id="total-sleeps">0</div>
+                            <div class="summary-label">Total Sleep Sessions</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="total-sleep-duration">0h 0m</div>
+                            <div class="summary-label">Total Sleep</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="avg-sleep-duration">0m</div>
+                            <div class="summary-label">Average Duration</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="last-sleep">-</div>
+                            <div class="summary-label">Last Sleep</div>
                         </div>
                     </div>
                 </div>
@@ -685,6 +732,7 @@
                 displayHistory();
                 displayFeedingSummary();
                 displayDiaperSummary();
+                displaySleepSummary();
                 return;
             }
             
@@ -703,6 +751,7 @@
                     displayHistory();
                     displayFeedingSummary();
                     displayDiaperSummary();
+                    displaySleepSummary();
                 } else if (response.status === 401) {
                     // Token expired or invalid
                     logout();
@@ -718,6 +767,7 @@
                 displayHistory();
                 displayFeedingSummary();
                 displayDiaperSummary();
+                displaySleepSummary();
             }
         }
         
@@ -846,6 +896,7 @@
                 displayHistory();
                 displayFeedingSummary();
                 displayDiaperSummary();
+                displaySleepSummary();
             }
         }
 
@@ -862,6 +913,12 @@
             // Set diaper form defaults
             document.getElementById('diaper-date').value = today;
             document.getElementById('diaper-time').value = currentTime;
+            
+            // Set sleep form defaults
+            document.getElementById('sleep-date').value = today;
+            document.getElementById('sleep-start-time').value = currentTime;
+            document.getElementById('sleep-end-time').value = currentTime;
+            document.getElementById('sleep-notes').value = '';
         }
         
         // Handle feeding form submission
@@ -934,6 +991,7 @@
                 displayHistory();
                 displayFeedingSummary();
                 displayDiaperSummary();
+                displaySleepSummary();
             }
         });
         
@@ -1004,8 +1062,78 @@
                 displayHistory();
                 displayFeedingSummary();
                 displayDiaperSummary();
+                displaySleepSummary();
             }
         });
+        
+        // Handle sleep form submission
+        document.getElementById('sleep-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const date = document.getElementById('sleep-date').value;
+            const startTime = document.getElementById('sleep-start-time').value;
+            const endTime = document.getElementById('sleep-end-time').value;
+            const notes = document.getElementById('sleep-notes').value;
+            let record;
+            if (editingId !== null) {
+                // Edit existing record
+                const index = babyRecords.findIndex(record => record.id === editingId);
+                if (index !== -1) {
+                    record = {
+                        id: editingId,
+                        date,
+                        startTime,
+                        endTime,
+                        type: 'sleep',
+                        details: `Sleep: ${startTime} - ${endTime}${notes ? ' (' + notes + ')' : ''}`,
+                        notes,
+                        timestamp: new Date(`${date}T${startTime}`).getTime(),
+                        duration: calculateSleepDuration(startTime, endTime)
+                    };
+                    babyRecords[index] = record;
+                }
+                editingId = null;
+            } else {
+                // Add new record
+                record = {
+                    id: Date.now(),
+                    date,
+                    startTime,
+                    endTime,
+                    type: 'sleep',
+                    details: `Sleep: ${startTime} - ${endTime}${notes ? ' (' + notes + ')' : ''}`,
+                    notes,
+                    timestamp: new Date(`${date}T${startTime}`).getTime(),
+                    duration: calculateSleepDuration(startTime, endTime)
+                };
+                babyRecords.push(record);
+            }
+            // Save to server
+            if (record) {
+                await saveRecordToServer(record);
+            }
+            // Cache current records locally
+            localStorage.setItem('babyTrackerOfflineRecords', JSON.stringify(babyRecords));
+            // Reset form
+            this.reset();
+            setDefaultDateTime();
+            alert('Sleep record saved successfully!');
+            if (document.getElementById('history').classList.contains('active')) {
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+                displaySleepSummary();
+            }
+        });
+        
+        // Calculate sleep duration in minutes
+        function calculateSleepDuration(start, end) {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            let startMins = sh * 60 + sm;
+            let endMins = eh * 60 + em;
+            if (endMins < startMins) endMins += 24 * 60; // handle overnight sleep
+            return endMins - startMins;
+        }
         
         // Display history
         function displayHistory() {
@@ -1022,13 +1150,23 @@
             let html = '';
             sortedRecords.forEach(record => {
                 const typeClass = record.type;
-                const typeIcon = record.type === 'feeding' ? '🍼' : '👶';
-                
+                let typeIcon = '';
+                let timeDisplay = '';
+                if (record.type === 'feeding') {
+                    typeIcon = '🍼';
+                    timeDisplay = `${record.date} at ${record.time}`;
+                } else if (record.type === 'diaper') {
+                    typeIcon = '👶';
+                    timeDisplay = `${record.date} at ${record.time}`;
+                } else if (record.type === 'sleep') {
+                    typeIcon = '😴';
+                    timeDisplay = `${record.date} ${record.startTime} - ${record.endTime}`;
+                }
                 html += `
                     <div class="history-item ${typeClass}">
                         <div class="history-details">
                             <div class="history-time">
-                                ${typeIcon} ${record.date} at ${record.time}
+                                ${typeIcon} ${timeDisplay}
                             </div>
                             <div class="history-info">${record.details}</div>
                         </div>
@@ -1095,6 +1233,24 @@
                 : '-';
         }
         
+        // Display sleep summary
+        function displaySleepSummary() {
+            const today = new Date().toISOString().split('T')[0];
+            const todaySleeps = babyRecords.filter(record => record.type === 'sleep' && record.date === today);
+            const totalSleeps = todaySleeps.length;
+            const totalSleepMins = todaySleeps.reduce((sum, record) => sum + (record.duration || 0), 0);
+            const avgSleepMins = totalSleeps > 0 ? Math.round(totalSleepMins / totalSleeps) : 0;
+            // Find last sleep
+            const lastSleep = todaySleeps.length > 0 ? todaySleeps.sort((a, b) => b.timestamp - a.timestamp)[0] : null;
+            // Format durations
+            const totalSleepH = Math.floor(totalSleepMins / 60);
+            const totalSleepMin = totalSleepMins % 60;
+            document.getElementById('total-sleeps').textContent = totalSleeps;
+            document.getElementById('total-sleep-duration').textContent = `${totalSleepH}h ${totalSleepMin}m`;
+            document.getElementById('avg-sleep-duration').textContent = `${avgSleepMins}m`;
+            document.getElementById('last-sleep').textContent = lastSleep ? `${lastSleep.startTime} - ${lastSleep.endTime}` : '-';
+        }
+        
         // Edit record function
         function editRecord(id) {
             const record = babyRecords.find(r => r.id === id);
@@ -1127,6 +1283,17 @@
                 
                 // Change button text
                 document.querySelector('#diaper-form button[type="submit"]').textContent = 'Update Diaper Change';
+            } else if (record.type === 'sleep') {
+                // Switch to sleep tab
+                showTab('sleep');
+                document.querySelector('[onclick="showTab(\'sleep\')"]').click();
+                // Fill form with record data
+                document.getElementById('sleep-date').value = record.date;
+                document.getElementById('sleep-start-time').value = record.startTime;
+                document.getElementById('sleep-end-time').value = record.endTime;
+                document.getElementById('sleep-notes').value = record.notes || '';
+                // Change button text
+                document.querySelector('#sleep-form button[type="submit"]').textContent = 'Update Sleep Record';
             }
         }
         
@@ -1146,6 +1313,7 @@
                 displayHistory();
                 displayFeedingSummary();
                 displayDiaperSummary();
+                displaySleepSummary();
             }
         }
         
