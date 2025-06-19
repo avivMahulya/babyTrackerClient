@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baby Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -414,6 +415,7 @@
                 <button class="tab" onclick="showTab('diaper')">Diaper Change</button>
                 <button class="tab" onclick="showTab('sleep')">Sleep</button>
                 <button class="tab" onclick="showTab('history')">History</button>
+                <button class="tab" onclick="showTab('graphs')">Graphs</button>
             </div>
             
             <!-- Feeding Tab -->
@@ -591,6 +593,25 @@
                 <!-- History List -->
                 <div id="history-list">
                     <p>No records found. Start by adding a feeding or diaper change!</p>
+                </div>
+            </div>
+            
+            <!-- Graphs Tab -->
+            <div id="graphs" class="content">
+                <h2>History Graphs</h2>
+                <div style="margin-bottom:20px;">
+                    <button onclick="changeGraphRange(-1)">&lt; Prev</button>
+                    <span id="graph-range-label" style="margin:0 10px;"></span>
+                    <button onclick="changeGraphRange(1)">Next &gt;</button>
+                </div>
+                <div style="margin-bottom:30px;">
+                    <canvas id="feedingChart" height="120"></canvas>
+                </div>
+                <div style="margin-bottom:30px;">
+                    <canvas id="diaperChart" height="120"></canvas>
+                </div>
+                <div style="margin-bottom:30px;">
+                    <canvas id="sleepChart" height="120"></canvas>
                 </div>
             </div>
         </div>
@@ -897,6 +918,8 @@
                 displayFeedingSummary();
                 displayDiaperSummary();
                 displaySleepSummary();
+            } else if (tabName === 'graphs') {
+                showGraphsTab();
             }
         }
 
@@ -993,6 +1016,9 @@
                 displayDiaperSummary();
                 displaySleepSummary();
             }
+            
+            // Update graphs if visible
+            updateGraphsIfVisible();
         });
         
         // Handle diaper form submission
@@ -1064,6 +1090,9 @@
                 displayDiaperSummary();
                 displaySleepSummary();
             }
+            
+            // Update graphs if visible
+            updateGraphsIfVisible();
         });
         
         // Handle sleep form submission
@@ -1123,6 +1152,9 @@
                 displayDiaperSummary();
                 displaySleepSummary();
             }
+            
+            // Update graphs if visible
+            updateGraphsIfVisible();
         });
         
         // Calculate sleep duration in minutes
@@ -1315,7 +1347,10 @@
                 displayDiaperSummary();
                 displaySleepSummary();
             }
-        }
+            
+            // Update graphs if visible
+            updateGraphsIfVisible();
+        });
         
         // Initialize the app
         function initApp() {
@@ -1343,6 +1378,148 @@
         
         // Start the app
         initApp();
+
+        // Graphs Tab Logic
+        let graphRangeStart = 0; // 0 = this week, -1 = last week, etc.
+        let feedingChart, diaperChart, sleepChart;
+
+        function showGraphsTab() {
+            // Calculate week range
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay() + 1 + graphRangeStart * 7); // Monday
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+            // Label
+            const label = `${startOfWeek.toISOString().split('T')[0]} to ${endOfWeek.toISOString().split('T')[0]}`;
+            document.getElementById('graph-range-label').textContent = label;
+
+            // Prepare data arrays for 7 days
+            const days = [];
+            const feedCounts = [], feedAmounts = [];
+            const diaperPee = [], diaperPoop = [], diaperBoth = [], diaperTotal = [];
+            const sleepDurations = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(startOfWeek);
+                d.setDate(startOfWeek.getDate() + i);
+                const dayStr = d.toISOString().split('T')[0];
+                days.push(dayStr.slice(5)); // MM-DD
+                // Feedings
+                const feedings = babyRecords.filter(r => r.type === 'feeding' && r.date === dayStr);
+                feedCounts.push(feedings.length);
+                feedAmounts.push(feedings.reduce((sum, r) => sum + (r.amount || 0), 0));
+                // Diapers
+                const diapers = babyRecords.filter(r => r.type === 'diaper' && r.date === dayStr);
+                diaperPee.push(diapers.filter(r => r.diaperType === 'Pee' || r.diaperType === 'Both').length);
+                diaperPoop.push(diapers.filter(r => r.diaperType === 'Poop' || r.diaperType === 'Both').length);
+                diaperBoth.push(diapers.filter(r => r.diaperType === 'Both').length);
+                diaperTotal.push(diapers.length);
+                // Sleep
+                const sleeps = babyRecords.filter(r => r.type === 'sleep' && r.date === dayStr);
+                sleepDurations.push(sleeps.reduce((sum, r) => sum + (r.duration || 0), 0) / 60); // hours
+            }
+
+            // Feeding Chart
+            if (feedingChart) feedingChart.destroy();
+            feedingChart = new Chart(document.getElementById('feedingChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: 'Feedings',
+                            data: feedCounts,
+                            backgroundColor: 'rgba(74,144,226,0.5)',
+                            borderColor: 'rgba(74,144,226,1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Total Amount (ml)',
+                            data: feedAmounts,
+                            backgroundColor: 'rgba(81,200,120,0.3)',
+                            borderColor: 'rgba(81,200,120,1)',
+                            borderWidth: 1,
+                            type: 'line',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Feedings' } },
+                        y1: { beginAtZero: true, position: 'right', title: { display: true, text: 'Amount (ml)' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            // Diaper Chart
+            if (diaperChart) diaperChart.destroy();
+            diaperChart = new Chart(document.getElementById('diaperChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: 'Pee',
+                            data: diaperPee,
+                            backgroundColor: 'rgba(81,200,120,0.7)'
+                        },
+                        {
+                            label: 'Poop',
+                            data: diaperPoop,
+                            backgroundColor: 'rgba(255,165,0,0.7)'
+                        },
+                        {
+                            label: 'Both',
+                            data: diaperBoth,
+                            backgroundColor: 'rgba(255,107,107,0.7)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Diaper Changes' } } }
+                }
+            });
+
+            // Sleep Chart
+            if (sleepChart) sleepChart.destroy();
+            sleepChart = new Chart(document.getElementById('sleepChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: 'Total Sleep (hours)',
+                            data: sleepDurations,
+                            backgroundColor: 'rgba(118,75,162,0.5)',
+                            borderColor: 'rgba(118,75,162,1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Sleep (hours)' } } }
+                }
+            });
+        }
+
+        function changeGraphRange(delta) {
+            graphRangeStart += delta;
+            showGraphsTab();
+        }
+
+        // After any record change, update graphs if visible
+        function updateGraphsIfVisible() {
+            if (document.getElementById('graphs').classList.contains('active')) {
+                showGraphsTab();
+            }
+        }
     </script>
 </body>
 </html>
