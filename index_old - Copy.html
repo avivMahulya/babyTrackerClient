@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Tracker</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f0f8ff;
+            --accent-color: #ff6b6b;
+            --success-color: #51c878;
+            --warning-color: #ffa500;
+            --text-color: #333;
+            --border-radius: 8px;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        header h1 {
+            color: white;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+
+        .content {
+            display: none;
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary-color);
+            background-color: var(--secondary-color);
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .history-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item.feeding {
+            border-left-color: var(--success-color);
+        }
+
+        .history-item.diaper {
+            border-left-color: var(--warning-color);
+        }
+
+        .history-details {
+            flex: 1;
+        }
+
+        .history-time {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .history-info {
+            margin-top: 5px;
+            color: #666;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            min-width: auto;
+            width: auto;
+        }
+
+        .btn-edit {
+            background-color: var(--warning-color);
+        }
+
+        .btn-edit:hover {
+            background-color: #e69500;
+        }
+
+        .btn-delete {
+            background-color: var(--accent-color);
+        }
+
+        .btn-delete:hover {
+            background-color: #ff5252;
+        }
+
+        .summary {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .summary h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .auth-toggle a {
+            color: var(--primary-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .status-bar {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 10px;
+            text-align: center;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            float: right;
+            width: auto;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .tab:last-child {
+                border-bottom: none;
+            }
+
+            .radio-group {
+                flex-direction: column;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .history-actions {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- Auth Section (Login/Register) -->
+        <div id="auth-section" style="display: none;">
+            <header>
+                <h1>Baby Tracker</h1>
+            </header>
+            
+            <div class="auth-container" id="login-form">
+                <h2>Login</h2>
+                <form id="login">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit">Login</button>
+                    <div class="auth-toggle">
+                        <span>Don't have an account? <a onclick="toggleAuthForm('register')">Register</a></span>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="auth-container" id="register-form" style="display: none;">
+                <h2>Register</h2>
+                <form id="register">
+                    <div class="form-group">
+                        <label for="register-name">Name</label>
+                        <input type="text" id="register-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required minlength="6">
+                    </div>
+                    <button type="submit">Register</button>
+                    <div class="auth-toggle">
+                        <span>Already have an account? <a onclick="toggleAuthForm('login')">Login</a></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Main App Section -->
+        <div id="main-section" style="display: none;">
+            <header>
+                <h1>Baby Tracker</h1>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </header>
+            
+            <div id="status-message" class="status-bar">
+                <span id="status-text">Connected to server</span>
+                <span id="sync-status"></span>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('feeding')">Feeding</button>
+                <button class="tab" onclick="showTab('diaper')">Diaper Change</button>
+                <button class="tab" onclick="showTab('history')">History</button>
+            </div>
+            
+            <!-- Feeding Tab -->
+            <div id="feeding" class="content active">
+                <h2>Record Feeding</h2>
+                <form id="feeding-form">
+                    <div class="form-group">
+                        <label for="feeding-date">Date</label>
+                        <input type="date" id="feeding-date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feeding-time">Time</label>
+                        <input type="time" id="feeding-time" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feeding-amount">Amount (ml)</label>
+                        <input type="number" id="feeding-amount" min="1" max="500" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Feeding Type</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="breast" name="feeding-type" value="Breast">
+                                <label for="breast">Breast</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="formula" name="feeding-type" value="Formula">
+                                <label for="formula">Formula</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="mixed" name="feeding-type" value="Mixed">
+                                <label for="mixed">Mixed</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit">Save Feeding Record</button>
+                </form>
+            </div>
+            
+            <!-- Diaper Tab -->
+            <div id="diaper" class="content">
+                <h2>Record Diaper Change</h2>
+                <form id="diaper-form">
+                    <div class="form-group">
+                        <label for="diaper-date">Date</label>
+                        <input type="date" id="diaper-date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="diaper-time">Time</label>
+                        <input type="time" id="diaper-time" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Diaper Type</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="pee" name="diaper-type" value="Pee">
+                                <label for="pee">Pee</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="poop" name="diaper-type" value="Poop">
+                                <label for="poop">Poop</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="both" name="diaper-type" value="Both">
+                                <label for="both">Both</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit">Save Diaper Change</button>
+                </form>
+            </div>
+            
+            <!-- History Tab -->
+            <div id="history" class="content">
+                <h2>Baby Care History</h2>
+                
+                <!-- Summary Section -->
+                <div id="feeding-summary" class="summary">
+                    <h3>Today's Feeding Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number" id="total-feedings">0</div>
+                            <div class="summary-label">Total Feedings</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="total-amount">0ml</div>
+                            <div class="summary-label">Total Amount</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="avg-amount">0ml</div>
+                            <div class="summary-label">Average Amount</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="last-feeding">-</div>
+                            <div class="summary-label">Last Feeding</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="diaper-summary" class="summary">
+                    <h3>Today's Diaper Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number" id="total-diapers">0</div>
+                            <div class="summary-label">Total Changes</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="pee-count">0</div>
+                            <div class="summary-label">Pee Only</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="poop-count">0</div>
+                            <div class="summary-label">Poop</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number" id="last-diaper">-</div>
+                            <div class="summary-label">Last Change</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- History List -->
+                <div id="history-list">
+                    <p>No records found. Start by adding a feeding or diaper change!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API configuration
+        //const API_URL = 'http://localhost:5000/api'; // Change this to your actual server URL in production
+        const API_URL = 'https://babytracker-44o2.onrender.com/api'; // Change this to your actual server URL in production
+        
+        // Authentication state
+        let authToken = null; //localStorage.getItem('babyTrackerToken');
+        let currentUser = null; //JSON.parse(localStorage.getItem('babyTrackerUser'));
+        
+        // Record data
+        let babyRecords = [];
+        let editingId = null;
+        let offlineRecords = []; // Store records when offline
+        let isOnline = navigator.onLine;
+        
+        // Check if user is online
+        window.addEventListener('online', function() {
+            isOnline = true;
+            document.getElementById('status-text').textContent = 'Connected to server';
+            syncOfflineRecords(); // Try to sync offline records
+        });
+        
+        window.addEventListener('offline', function() {
+            isOnline = false;
+            document.getElementById('status-text').textContent = 'Working offline - changes will sync when reconnected';
+        });
+        
+        // Check authentication and show appropriate screen
+        function checkAuth() {
+            if (authToken && currentUser) {
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('main-section').style.display = 'block';
+                fetchRecords(); // Load records from server
+            } else {
+                document.getElementById('auth-section').style.display = 'block';
+                document.getElementById('main-section').style.display = 'none';
+                toggleAuthForm('login');
+            }
+        }
+        
+        // Toggle between login and register forms
+        function toggleAuthForm(form) {
+            if (form === 'login') {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+            } else {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            }
+        }
+        
+        // Handle login form submission
+        document.getElementById('login').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    checkAuth();
+                } else {
+                    alert(data.error || 'Login failed');
+                }
+            } catch (error) {
+                alert('Error connecting to server. Please try again.');
+                console.error(error);
+            }
+        });
+        
+        // Handle register form submission
+        document.getElementById('register').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/users/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    checkAuth();
+                } else {
+                    alert(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                alert('Error connecting to server. Please try again.');
+                console.error(error);
+            }
+        });
+        
+        // Logout function
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            babyRecords = [];
+            checkAuth();
+        }
+        
+        // Fetch records from server
+        async function fetchRecords() {
+            if (!isOnline) {
+                // Use cached records if offline
+                babyRecords = JSON.parse(localStorage.getItem('babyTrackerOfflineRecords') || '[]');
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/records`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    babyRecords = await response.json();
+                    // Cache records for offline use
+                    localStorage.setItem('babyTrackerOfflineRecords', JSON.stringify(babyRecords));
+                    
+                    displayHistory();
+                    displayFeedingSummary();
+                    displayDiaperSummary();
+                } else if (response.status === 401) {
+                    // Token expired or invalid
+                    logout();
+                } else {
+                    console.error('Failed to fetch records');
+                }
+            } catch (error) {
+                console.error('Error fetching records:', error);
+                document.getElementById('status-text').textContent = 'Failed to connect to server - working offline';
+                
+                // Use cached records if available
+                babyRecords = JSON.parse(localStorage.getItem('babyTrackerOfflineRecords') || '[]');
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+            }
+        }
+        
+        // Save record to server
+        async function saveRecordToServer(record) {
+            if (!isOnline) {
+                // Save to offline records if not online
+                offlineRecords.push(record);
+                localStorage.setItem('babyTrackerPendingRecords', JSON.stringify(offlineRecords));
+                document.getElementById('sync-status').textContent = `(${offlineRecords.length} pending changes)`;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/records`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(record)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save record');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error saving record:', error);
+                // Add to offline records if save fails
+                offlineRecords.push(record);
+                localStorage.setItem('babyTrackerPendingRecords', JSON.stringify(offlineRecords));
+                document.getElementById('sync-status').textContent = `(${offlineRecords.length} pending changes)`;
+            }
+        }
+        
+        // Delete record from server
+        async function deleteRecordFromServer(id) {
+            if (!isOnline) {
+                // Mark for deletion when back online
+                offlineRecords.push({ id, _delete: true });
+                localStorage.setItem('babyTrackerPendingRecords', JSON.stringify(offlineRecords));
+                document.getElementById('sync-status').textContent = `(${offlineRecords.length} pending changes)`;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/records/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete record');
+                }
+            } catch (error) {
+                console.error('Error deleting record:', error);
+                // Mark for deletion when back online
+                offlineRecords.push({ id, _delete: true });
+                localStorage.setItem('babyTrackerPendingRecords', JSON.stringify(offlineRecords));
+                document.getElementById('sync-status').textContent = `(${offlineRecords.length} pending changes)`;
+            }
+        }
+        
+        // Sync offline records when back online
+        async function syncOfflineRecords() {
+            const pendingRecords = JSON.parse(localStorage.getItem('babyTrackerPendingRecords') || '[]');
+            
+            if (pendingRecords.length === 0) {
+                return;
+            }
+            
+            document.getElementById('sync-status').textContent = `(Syncing ${pendingRecords.length} changes...)`;
+            
+            // Process each pending record
+            for (let i = 0; i < pendingRecords.length; i++) {
+                const record = pendingRecords[i];
+                
+                if (record._delete) {
+                    // This is a deletion request
+                    try {
+                        await deleteRecordFromServer(record.id);
+                    } catch (error) {
+                        console.error('Failed to sync delete:', error);
+                        continue;
+                    }
+                } else {
+                    // This is an add/update request
+                    try {
+                        await saveRecordToServer(record);
+                    } catch (error) {
+                        console.error('Failed to sync record:', error);
+                        continue;
+                    }
+                }
+            }
+            
+            // Clear offline records and refresh
+            offlineRecords = [];
+            localStorage.removeItem('babyTrackerPendingRecords');
+            document.getElementById('sync-status').textContent = '';
+            
+            // Refresh records from server
+            fetchRecords();
+        }
+
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all content
+            const contents = document.querySelectorAll('.content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected content and mark tab as active
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // If switching to history tab, update displays
+            if (tabName === 'history') {
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+            }
+        }
+
+        // Set default date and time
+        function setDefaultDateTime() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            // Set feeding form defaults
+            document.getElementById('feeding-date').value = today;
+            document.getElementById('feeding-time').value = currentTime;
+            
+            // Set diaper form defaults
+            document.getElementById('diaper-date').value = today;
+            document.getElementById('diaper-time').value = currentTime;
+        }
+        
+        // Handle feeding form submission
+        document.getElementById('feeding-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('feeding-date').value;
+            const time = document.getElementById('feeding-time').value;
+            const amount = document.getElementById('feeding-amount').value;
+            const feedingType = document.querySelector('input[name="feeding-type"]:checked').value;
+            
+            let record;
+            
+            if (editingId !== null) {
+                // Edit existing record
+                const index = babyRecords.findIndex(record => record.id === editingId);
+                if (index !== -1) {
+                    record = {
+                        id: editingId,
+                        date,
+                        time,
+                        type: 'feeding',
+                        feedingType,
+                        details: `${amount} ml (${feedingType})`,
+                        amount: parseInt(amount),
+                        timestamp: new Date(`${date}T${time}`).getTime()
+                    };
+                    
+                    babyRecords[index] = record;
+                }
+                editingId = null;
+            } else {
+                // Add new record
+                record = {
+                    id: Date.now(),
+                    date,
+                    time,
+                    type: 'feeding',
+                    feedingType,
+                    details: `${amount} ml (${feedingType})`,
+                    amount: parseInt(amount),
+                    timestamp: new Date(`${date}T${time}`).getTime()
+                };
+                
+                babyRecords.push(record);
+            }
+            
+            // Save to server
+            if (record) {
+                await saveRecordToServer(record);
+            }
+            
+            // Cache current records locally
+            localStorage.setItem('babyTrackerOfflineRecords', JSON.stringify(babyRecords));
+            
+            // Reset form
+            this.reset();
+            
+            // Set today's date and current time as default
+            setDefaultDateTime();
+            
+            // Set a default feeding type selected (Formula)
+            document.getElementById('formula').checked = true;
+            
+            // Show confirmation
+            alert('Feeding record saved successfully!');
+            
+            // Update display if on history tab
+            if (document.getElementById('history').classList.contains('active')) {
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+            }
+        });
+        
+        // Handle diaper form submission
+        document.getElementById('diaper-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('diaper-date').value;
+            const time = document.getElementById('diaper-time').value;
+            const diaperType = document.querySelector('input[name="diaper-type"]:checked').value;
+            
+            let record;
+            
+            if (editingId !== null) {
+                // Edit existing record
+                const index = babyRecords.findIndex(record => record.id === editingId);
+                if (index !== -1) {
+                    record = {
+                        id: editingId,
+                        date,
+                        time,
+                        type: 'diaper',
+                        diaperType,
+                        details: diaperType,
+                        timestamp: new Date(`${date}T${time}`).getTime()
+                    };
+                    
+                    babyRecords[index] = record;
+                }
+                editingId = null;
+            } else {
+                // Add new record
+                record = {
+                    id: Date.now(),
+                    date,
+                    time,
+                    type: 'diaper',
+                    diaperType,
+                    details: diaperType,
+                    timestamp: new Date(`${date}T${time}`).getTime()
+                };
+                
+                babyRecords.push(record);
+            }
+            
+            // Save to server
+            if (record) {
+                await saveRecordToServer(record);
+            }
+            
+            // Cache current records locally
+            localStorage.setItem('babyTrackerOfflineRecords', JSON.stringify(babyRecords));
+            
+            // Reset form
+            this.reset();
+            
+            // Set today's date and current time as default
+            setDefaultDateTime();
+            
+            // Set a default diaper type selected (Pee)
+            document.getElementById('pee').checked = true;
+            
+            // Show confirmation
+            alert('Diaper change record saved successfully!');
+            
+            // Update display if on history tab
+            if (document.getElementById('history').classList.contains('active')) {
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+            }
+        });
+        
+        // Display history
+        function displayHistory() {
+            const historyList = document.getElementById('history-list');
+            
+            if (babyRecords.length === 0) {
+                historyList.innerHTML = '<p>No records found. Start by adding a feeding or diaper change!</p>';
+                return;
+            }
+            
+            // Sort records by timestamp (newest first)
+            const sortedRecords = [...babyRecords].sort((a, b) => b.timestamp - a.timestamp);
+            
+            let html = '';
+            sortedRecords.forEach(record => {
+                const typeClass = record.type;
+                const typeIcon = record.type === 'feeding' ? '🍼' : '👶';
+                
+                html += `
+                    <div class="history-item ${typeClass}">
+                        <div class="history-details">
+                            <div class="history-time">
+                                ${typeIcon} ${record.date} at ${record.time}
+                            </div>
+                            <div class="history-info">${record.details}</div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-small btn-edit" onclick="editRecord(${record.id})">Edit</button>
+                            <button class="btn-small btn-delete" onclick="deleteRecord(${record.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyList.innerHTML = html;
+        }
+        
+        // Display feeding summary
+        function displayFeedingSummary() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayFeedings = babyRecords.filter(record => 
+                record.type === 'feeding' && record.date === today
+            );
+            
+            const totalFeedings = todayFeedings.length;
+            const totalAmount = todayFeedings.reduce((sum, record) => sum + record.amount, 0);
+            const avgAmount = totalFeedings > 0 ? Math.round(totalAmount / totalFeedings) : 0;
+            
+            // Find last feeding
+            const lastFeeding = todayFeedings.length > 0 
+                ? todayFeedings.sort((a, b) => b.timestamp - a.timestamp)[0] 
+                : null;
+            
+            document.getElementById('total-feedings').textContent = totalFeedings;
+            document.getElementById('total-amount').textContent = totalAmount + 'ml';
+            document.getElementById('avg-amount').textContent = avgAmount + 'ml';
+            document.getElementById('last-feeding').textContent = lastFeeding 
+                ? lastFeeding.time 
+                : '-';
+        }
+        
+        // Display diaper summary
+        function displayDiaperSummary() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayDiapers = babyRecords.filter(record => 
+                record.type === 'diaper' && record.date === today
+            );
+            
+            const totalDiapers = todayDiapers.length;
+            const peeCount = todayDiapers.filter(record => 
+                record.diaperType === 'Pee' || record.diaperType === 'Both'
+            ).length;
+            const poopCount = todayDiapers.filter(record => 
+                record.diaperType === 'Poop' || record.diaperType === 'Both'
+            ).length;
+            
+            // Find last diaper change
+            const lastDiaper = todayDiapers.length > 0 
+                ? todayDiapers.sort((a, b) => b.timestamp - a.timestamp)[0] 
+                : null;
+            
+            document.getElementById('total-diapers').textContent = totalDiapers;
+            document.getElementById('pee-count').textContent = peeCount;
+            document.getElementById('poop-count').textContent = poopCount;
+            document.getElementById('last-diaper').textContent = lastDiaper 
+                ? lastDiaper.time 
+                : '-';
+        }
+        
+        // Edit record function
+        function editRecord(id) {
+            const record = babyRecords.find(r => r.id === id);
+            if (!record) return;
+            
+            editingId = id;
+            
+            if (record.type === 'feeding') {
+                // Switch to feeding tab
+                showTab('feeding');
+                document.querySelector('[onclick="showTab(\'feeding\')"]').click();
+                
+                // Fill form with record data
+                document.getElementById('feeding-date').value = record.date;
+                document.getElementById('feeding-time').value = record.time;
+                document.getElementById('feeding-amount').value = record.amount;
+                document.querySelector(`input[name="feeding-type"][value="${record.feedingType}"]`).checked = true;
+                
+                // Change button text
+                document.querySelector('#feeding-form button[type="submit"]').textContent = 'Update Feeding Record';
+            } else if (record.type === 'diaper') {
+                // Switch to diaper tab
+                showTab('diaper');
+                document.querySelector('[onclick="showTab(\'diaper\')"]').click();
+                
+                // Fill form with record data
+                document.getElementById('diaper-date').value = record.date;
+                document.getElementById('diaper-time').value = record.time;
+                document.querySelector(`input[name="diaper-type"][value="${record.diaperType}"]`).checked = true;
+                
+                // Change button text
+                document.querySelector('#diaper-form button[type="submit"]').textContent = 'Update Diaper Change';
+            }
+        }
+        
+        // Delete record function
+        async function deleteRecord(id) {
+            if (confirm('Are you sure you want to delete this record?')) {
+                // Remove from local array
+                babyRecords = babyRecords.filter(record => record.id !== id);
+                
+                // Delete from server
+                await deleteRecordFromServer(id);
+                
+                // Update cached records
+                localStorage.setItem('babyTrackerOfflineRecords', JSON.stringify(babyRecords));
+                
+                // Update displays
+                displayHistory();
+                displayFeedingSummary();
+                displayDiaperSummary();
+            }
+        }
+        
+        // Initialize the app
+        function initApp() {
+            // Check authentication first
+            checkAuth();
+            
+            // Load any pending offline records
+            offlineRecords = JSON.parse(localStorage.getItem('babyTrackerPendingRecords') || '[]');
+            if (offlineRecords.length > 0) {
+                document.getElementById('sync-status').textContent = `(${offlineRecords.length} pending changes)`;
+            }
+            
+            // Set default date and time
+            setDefaultDateTime();
+            
+            // Set default radio button selections
+            document.getElementById('formula').checked = true;
+            document.getElementById('pee').checked = true;
+            
+            // Try to sync if online
+            if (isOnline && authToken) {
+                syncOfflineRecords();
+            }
+        }
+        
+        // Start the app
+        initApp();
+    </script>
+</body>
+</html>
