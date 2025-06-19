@@ -555,8 +555,8 @@
         const API_URL = 'https://babytracker-44o2.onrender.com/api'; // Change this to your actual server URL in production
         
         // Authentication state
-        let authToken = null; //localStorage.getItem('babyTrackerToken');
-        let currentUser = null; //JSON.parse(localStorage.getItem('babyTrackerUser'));
+        let authToken = localStorage.getItem('babyTrackerToken');
+        let currentUser = JSON.parse(localStorage.getItem('babyTrackerUser') || 'null');
         
         // Record data
         let babyRecords = [];
@@ -621,6 +621,8 @@
                 if (response.ok) {
                     authToken = data.token;
                     currentUser = data.user;
+                    localStorage.setItem('babyTrackerToken', data.token);
+                    localStorage.setItem('babyTrackerUser', JSON.stringify(data.user));
                     checkAuth();
                 } else {
                     alert(data.error || 'Login failed');
@@ -653,6 +655,8 @@
                 if (response.ok) {
                     authToken = data.token;
                     currentUser = data.user;
+                    localStorage.setItem('babyTrackerToken', data.token);
+                    localStorage.setItem('babyTrackerUser', JSON.stringify(data.user));
                     checkAuth();
                 } else {
                     alert(data.error || 'Registration failed');
@@ -668,6 +672,8 @@
             authToken = null;
             currentUser = null;
             babyRecords = [];
+            localStorage.removeItem('babyTrackerToken');
+            localStorage.removeItem('babyTrackerUser');
             checkAuth();
         }
         
